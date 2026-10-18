@@ -4,7 +4,7 @@ from abc import abstractmethod
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import override
+from typing import Any, override
 
 from adguardhome import (
     AdGuardHome,
@@ -33,6 +33,7 @@ class AdGuardHomeState:
     safe_search: Any
     blocked_services: list[str]
     rewrites: list[dict]
+
 
 @dataclass(frozen=True, kw_only=True)
 class AdGuardHomeStatistics:
@@ -64,14 +65,13 @@ class AdGuardHomeCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             update_interval=update_interval,
         )
         self.client = client
-        
+
     @override
     async def _async_update_data(self) -> _DataT:
         """Fetch the data from AdGuard Home."""
         try:
             return await self._async_fetch()
         except AdGuardHomeError as error:
-            # Si l'erreur contient un problème d'authentification (souvent 401/403)
             if "auth" in str(error).lower() or "unauthorized" in str(error).lower():
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
@@ -182,6 +182,7 @@ class AdGuardHomeStatisticsCoordinator(AdGuardHomeCoordinator[AdGuardHomeStatist
 
         return AdGuardHomeStatistics(stats=stats, blocklists=blocklists)
 
+
 @dataclass
 class AdGuardData:
     """Data of an AdGuard Home config entry."""
@@ -189,4 +190,3 @@ class AdGuardData:
     client: AdGuardHome
     state: AdGuardHomeStateCoordinator
     statistics: AdGuardHomeStatisticsCoordinator
-    # update: AdGuardHomeUpdateCoordinator
