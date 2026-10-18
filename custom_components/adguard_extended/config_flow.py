@@ -5,11 +5,9 @@ from typing import Any, override
 
 from adguardhome import (
     AdGuardHome,
-    AdGuardHomeAuthenticationError,
-    AdGuardHomeConnectionError,
     AdGuardHomeError,
 )
-import probatio
+import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -51,17 +49,18 @@ async def _async_validate_connection(
         await adguard.status()
     except AdGuardHomeError as error:
         err_msg = str(error).lower()
-        if "auth" in err_msg or "unauthorized" in err_msg:
+        if "auth" in err_msg or "unauthorized" in err_msg or "401" in err_msg or "403" in err_msg:
             return "invalid_auth"
         return "cannot_connect"
-    except AdGuardHomeError:
+    except Exception:
         LOGGER.exception("Unexpected error connecting to AdGuard Home")
         return "unknown"
+
     return None
 
 
 class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a AdGuard Home config flow."""
+    """Handle an AdGuard Home config flow."""
 
     VERSION = 1
     MINOR_VERSION = 2
@@ -74,14 +73,14 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=probatio.Schema(
+            data_schema=vol.Schema(
                 {
-                    probatio.Required(CONF_HOST): str,
-                    probatio.Required(CONF_PORT, default=3000): probatio.Coerce(int),
-                    probatio.Optional(CONF_USERNAME): str,
-                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
-                    probatio.Required(CONF_SSL, default=True): bool,
-                    probatio.Required(CONF_VERIFY_SSL, default=True): bool,
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_PORT, default=3000): int,
+                    vol.Optional(CONF_USERNAME): str,
+                    vol.Optional(vol.Secret(CONF_PASSWORD)): str,
+                    vol.Required(CONF_SSL, default=True): bool,
+                    vol.Required(CONF_VERIFY_SSL, default=True): bool,
                 }
             ),
             errors=errors or {},
@@ -104,7 +103,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
-            return await self._show_setup_form(user_input)
+            return await self._show_setup_form()
 
         self._async_abort_entries_match(
             {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
@@ -137,10 +136,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Prepare configuration for a Hass.io AdGuard Home app.
-
-        This flow is triggered by the discovery component.
-        """
+        """Prepare configuration for a Hass.io AdGuard Home app."""
         await self._async_handle_discovery_without_unique_id()
 
         self._hassio_discovery = discovery_info.config
@@ -206,12 +202,12 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=probatio.Schema(
+            data_schema=vol.Schema(
                 {
-                    probatio.Required(
+                    vol.Required(
                         CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME] or ""
                     ): str,
-                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+                    vol.Required(vol.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
