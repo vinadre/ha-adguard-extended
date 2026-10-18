@@ -27,7 +27,6 @@ from .coordinator import (
     AdGuardData,
     AdGuardHomeStateCoordinator,
     AdGuardHomeStatisticsCoordinator,
-    AdGuardHomeUpdateCoordinator,
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -119,11 +118,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> N
     statistics = AdGuardHomeStatisticsCoordinator(hass, entry, adguard)
     await statistics.async_config_entry_first_refresh()
 
-    update = AdGuardHomeUpdateCoordinator(hass, entry, adguard)
-    await update.async_refresh()
+    #update = AdGuardHomeUpdateCoordinator(hass, entry, adguard)
+    #await update.async_refresh()
 
     entry.runtime_data = AdGuardData(
-        client=adguard, state=state, statistics=statistics, update=update
+        client=adguard, state=state, statistics=statistics
+        #, update=update
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
