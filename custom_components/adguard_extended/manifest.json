@@ -1,0 +1,10 @@
+{
+  "domain": "adguard_extended",
+  "name": "AdGuard Home Extended",
+  "codeowners": ["@vinadre"],
+  "config_flow": true,
+  "documentation": "https://github.com/vinadre/ha-adguard-extended",
+  "issue_tracker": "https://github.com/vinadre/ha-adguard-extended/issues",
+  "iot_class": "local_polling",
+  "version": "1.0.0"
+}
