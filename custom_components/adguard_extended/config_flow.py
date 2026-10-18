@@ -58,9 +58,10 @@ async def _async_validate_connection(
 
     return None
 
-
 class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an AdGuard Home config flow."""
+
+    DOMAIN = DOMAIN  # <--- Ajoutez cette ligne explicite ici
 
     VERSION = 1
     MINOR_VERSION = 2
