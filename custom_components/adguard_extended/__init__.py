@@ -30,7 +30,7 @@ from .coordinator import (
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -118,12 +118,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> N
     statistics = AdGuardHomeStatisticsCoordinator(hass, entry, adguard)
     await statistics.async_config_entry_first_refresh()
 
-    #update = AdGuardHomeUpdateCoordinator(hass, entry, adguard)
-    #await update.async_refresh()
-
     entry.runtime_data = AdGuardData(
         client=adguard, state=state, statistics=statistics
-        #, update=update
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -132,4 +128,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> N
 async def async_unload_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> None:
     """Unload AdGuard Home Extended config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    
