@@ -40,8 +40,9 @@ class AdGuardHomeState:
     query_log: QueryLogConfig
     safe_browsing: bool
     safe_search: SafeSearchConfig
-    blocked_services: list[str]  # <--- Ajout pour stocker l'état des services bloqués
-    rewrites: list[dict]  # <--- Ajout pour stocker les règles DNS    
+    blocked_services: list[str]
+    rewrites: list[dict]
+
 
 @dataclass(frozen=True, kw_only=True)
 class AdGuardHomeStatistics:
@@ -80,8 +81,6 @@ class AdGuardHomeCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         try:
             return await self._async_fetch()
         except AdGuardHomeAuthenticationError as error:
-            # The credentials stopped working, like after a password change in
-            # AdGuard Home. This makes Home Assistant ask for new ones.
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
@@ -110,7 +109,6 @@ class AdGuardHomeStateCoordinator(AdGuardHomeCoordinator[AdGuardHomeState]):
         self, hass: HomeAssistant, entry: AdGuardConfigEntry, client: AdGuardHome
     ) -> None:
         """Initialize the coordinator."""
-        # Often, as these back the switches, which can be changed in AdGuard Home.
         super().__init__(hass, entry, client, "state", timedelta(seconds=10))
 
     @override
@@ -123,8 +121,8 @@ class AdGuardHomeStateCoordinator(AdGuardHomeCoordinator[AdGuardHomeState]):
             query_log,
             safe_browsing,
             safe_search,
-            blocked_services_response, # <--- Récupération de la réponse brute    
-            rewrites_response,  # <--- Ajout de la variable pour les rewrites                    
+            blocked_services_response,
+            rewrites_response,
         ) = await asyncio.gather(
             self.client.status(),
             self.client.filtering.config(),
@@ -132,14 +130,13 @@ class AdGuardHomeStateCoordinator(AdGuardHomeCoordinator[AdGuardHomeState]):
             self.client.querylog.config(),
             self.client.safebrowsing.enabled(),
             self.client.safesearch.config(),
-            self.client._request("control/blocked_services/get"), # <--- Endpoint des services bloqués 
-            self.client._request("control/rewrite/list"),  # <--- Endpoint pour lister les réécritures DNS                      
+            self.client._request("control/blocked_services/get"),
+            self.client._request("control/rewrite/list"),
         )
 
-        # Extraction de la liste des applications bloquées (ex: ['youtube'])
         blocked_services = blocked_services_response.get("apps", []) if isinstance(blocked_services_response, dict) else []
-        rewrites = rewrites_response if isinstance(rewrites_response, list) else []  # <--- Formatage de la liste
-        
+        rewrites = rewrites_response if isinstance(rewrites_response, list) else []
+
         return AdGuardHomeState(
             status=status,
             filtering=filtering,
@@ -147,12 +144,12 @@ class AdGuardHomeStateCoordinator(AdGuardHomeCoordinator[AdGuardHomeState]):
             query_log=query_log,
             safe_browsing=safe_browsing,
             safe_search=safe_search,
-            blocked_services=blocked_services, # <--- Transmission de la liste           
-            rewrites=rewrites,  # <--- Transmission au dataclass 
+            blocked_services=blocked_services,
+            rewrites=rewrites,
         )
 
     async def async_set_dns_rewrite_status(self, target_domain: str, enabled: bool) -> None:
-        """Active ou désactive une réécriture DNS existante par son domaine."""
+        """Active ou desactive une reecriture DNS existante par son domaine."""
         rewrites = await self.client._request("control/rewrite/list")
         
         rule_to_update = None
@@ -223,4 +220,3 @@ class AdGuardData:
     state: AdGuardHomeStateCoordinator
     statistics: AdGuardHomeStatisticsCoordinator
     update: AdGuardHomeUpdateCoordinator
-
