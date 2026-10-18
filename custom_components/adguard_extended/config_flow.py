@@ -49,14 +49,14 @@ async def _async_validate_connection(
 
     try:
         await adguard.status()
-    except AdGuardHomeConnectionError:
+    except AdGuardHomeError as error:
+        err_msg = str(error).lower()
+        if "auth" in err_msg or "unauthorized" in err_msg:
+            return "invalid_auth"
         return "cannot_connect"
-    except AdGuardHomeAuthenticationError:
-        return "invalid_auth"
     except AdGuardHomeError:
         LOGGER.exception("Unexpected error connecting to AdGuard Home")
         return "unknown"
-
     return None
 
 
