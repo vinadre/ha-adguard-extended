@@ -9,7 +9,6 @@ from typing import override
 from adguardhome import (
     AdGuardHome,
     AdGuardHomeError,
-    AvailableUpdate,
     FilteringConfig,
     FilterList,
     QueryLogConfig,
@@ -190,22 +189,6 @@ class AdGuardHomeStatisticsCoordinator(AdGuardHomeCoordinator[AdGuardHomeStatist
 
         return AdGuardHomeStatistics(stats=stats, blocklists=blocklists)
 
-
-class AdGuardHomeUpdateCoordinator(AdGuardHomeCoordinator[AvailableUpdate]):
-    """Keep track of updates for AdGuard Home."""
-
-    def __init__(
-        self, hass: HomeAssistant, entry: AdGuardConfigEntry, client: AdGuardHome
-    ) -> None:
-        """Initialize the coordinator."""
-        super().__init__(hass, entry, client, "update", timedelta(minutes=5))
-
-    @override
-    async def _async_fetch(self) -> AvailableUpdate:
-        """Fetch the available update of AdGuard Home."""
-        return await self.client.update.get()
-
-
 @dataclass
 class AdGuardData:
     """Data of an AdGuard Home config entry."""
@@ -213,4 +196,4 @@ class AdGuardData:
     client: AdGuardHome
     state: AdGuardHomeStateCoordinator
     statistics: AdGuardHomeStatisticsCoordinator
-    update: AdGuardHomeUpdateCoordinator
+    # update: AdGuardHomeUpdateCoordinator
