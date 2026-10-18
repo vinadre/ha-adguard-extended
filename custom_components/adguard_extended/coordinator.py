@@ -9,12 +9,6 @@ from typing import override
 from adguardhome import (
     AdGuardHome,
     AdGuardHomeError,
-    FilteringConfig,
-    FilterList,
-    QueryLogConfig,
-    SafeSearchConfig,
-    Stats,
-    Status,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -31,22 +25,21 @@ type AdGuardConfigEntry = ConfigEntry[AdGuardData]
 class AdGuardHomeState:
     """The status of AdGuard Home and the features that can be turned on and off."""
 
-    status: Status
-    filtering: FilteringConfig
+    status: Any
+    filtering: Any
     parental: bool
-    query_log: QueryLogConfig
+    query_log: Any
     safe_browsing: bool
-    safe_search: SafeSearchConfig
+    safe_search: Any
     blocked_services: list[str]
     rewrites: list[dict]
-
 
 @dataclass(frozen=True, kw_only=True)
 class AdGuardHomeStatistics:
     """The statistics of AdGuard Home, and its blocklists."""
 
-    stats: Stats
-    blocklists: tuple[FilterList, ...]
+    stats: Any
+    blocklists: tuple[Any, ...]
 
 
 class AdGuardHomeCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
